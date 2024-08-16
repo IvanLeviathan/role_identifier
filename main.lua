@@ -6,12 +6,14 @@ local role_identifier = {
     name = "Role Identifier",
     author = "Misosoup",
     desc = "Addon for detecting tank/healers classes",
-    version = "0.5"
+    version = "0.8"
 }
 local CANVAS
 
-local tankIconPath = 'Game\\ui\\icon\\icon_skill_adamant01.dds'
-local healerIconPath = 'Game\\ui\\icon\\icon_skill_love28.dds'
+-- local tankIconPath = 'Game\\ui\\icon\\icon_skill_adamant01.dds'
+-- local healerIconPath = 'Game\\ui\\icon\\icon_skill_love28.dds'
+local tankIconPath = '../Addon/role_identifier/icons/tank.png'
+local healerIconPath = '../Addon/role_identifier/icons/healer.png'
 
 local playersClasses = {}
 local curIcon
@@ -47,13 +49,12 @@ local function renderIcons(target)
     end
 
     if canvasUI == nil then
-        icon = CreateItemIconButton('roleIcon', CANVAS)
         -- Create Icon
-        F_SLOT.ApplySlotSkin(icon, icon.back, SLOT_STYLE.DEFAULT)
-
-        icon:SetHeight(settings.icon_size)
-        icon:SetWidth(settings.icon_size)
-        icon:Clickable(false)
+        icon = CANVAS:CreateImageDrawable("Textures/Defaults/White.dds",
+                                          "overlay")
+        icon:SetExtent(settings.icon_size, settings.icon_size)
+        icon:SetVisible(false)
+        icon:SetSRGB(false)
 
         -- Create Text
         local className = CANVAS:CreateChildWidget("label", "label", 0, true)
@@ -69,7 +70,8 @@ local function renderIcons(target)
     else
         if (curIcon ~= playersClasses[target.name].icon) then
             curIcon = playersClasses[target.name].icon
-            F_SLOT.SetIconBackGround(icon, curIcon)
+            local visible = icon:SetTgaTexture(curIcon)
+            icon:SetVisible(visible)
         end
         if curIcon ~= nil then
             canvasUI.icon:AddAnchor("CENTER", CANVAS, "CENTER", offsetX, offsetY)
@@ -118,8 +120,7 @@ local function OnUpdate(dt)
 end
 
 local function OnSettingsSaved()
-    canvasUI.icon:SetHeight(settings.icon_size)
-    canvasUI.icon:SetWidth(settings.icon_size)
+    canvasUI.icon:SetExtent(settings.icon_size, settings.icon_size)
 
     canvasUI.text.style:SetFontSize(settings.font_size)
     if settings.show_class_name then
