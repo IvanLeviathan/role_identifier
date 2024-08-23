@@ -68,6 +68,14 @@ local function createButton(id, parent, text, x, y)
     return button
 end
 
+local function createComboBox(parent, values, x, y)
+    local dropdownBtn = W_CTRL.CreateComboBox(parent)
+    dropdownBtn:AddAnchor("TOPLEFT", parent, x, y)
+    dropdownBtn:SetExtent(200, 24)
+    dropdownBtn.dropdownItem = values
+    return dropdownBtn
+end
+
 -- Settings
 local function saveSettings()
     settings.healers = helpers.splitString(
@@ -90,34 +98,70 @@ local function saveSettings()
 
     settings.show_class_name = settingsControls.showClassName:GetChecked()
 
+    settings.only_specified = settingsControls.onlySpecified:GetChecked()
+
+    settings.icon_type = settingsControls.iconType:GetSelectedIndex()
+
     helpers.updateSettings()
 
 end
 local function openSettingsWindow() settingsWindow:Show(true) end
+local function toggleMode(state)
+    if state then
+        settingsControls.iconType:SetEnable(true)
+    else
+        settingsControls.iconType:Select(2)
+        settingsControls.iconType:SetEnable(false)
+    end
+end
+
 local function initSettingsPage()
     settings = api.GetSettings("role_identifier")
     settingsWindow = api.Interface:CreateWindow("RiSettings",
                                                 'Role Identifier Settings', 800,
                                                 600)
-
     local wW, wH = settingsWindow:GetExtent()
+    local labelsOffsetY = 70
+    -- mode
+    local iconTypeLabel = createLabel('iconTypeLabel', settingsWindow, 'Mode:',
+                                      labelsOffsetY, 15)
+    labelsOffsetY = labelsOffsetY + 20
+    local iconType = createComboBox(settingsWindow, {'Tank/Healer', 'Set'},
+                                    padding, labelsOffsetY)
+    iconType:Select(settings.icon_type)
+    settingsControls.iconType = iconType
+    local onlySpecified = createCheckbox('onlySpecified', settingsWindow,
+                                         "Show only specified classes",
+                                         labelsOffsetY)
+
+    onlySpecified:AddAnchor("TOPLEFT", settingsWindow, 225, labelsOffsetY)
+    function onlySpecified:OnCheckChanged() toggleMode(self:GetChecked()) end
+    onlySpecified:SetHandler("OnCheckChanged", onlySpecified.OnCheckChanged)
+    onlySpecified:SetChecked(settings.only_specified)
+    toggleMode(settings.only_specified)
+    settingsControls.onlySpecified = onlySpecified
 
     -- tanks
-    local tanksLabel = createLabel('tanksLabel', settingsWindow, 'Tanks:', 70)
+    labelsOffsetY = 120
+    local tanksLabel = createLabel('tanksLabel', settingsWindow, 'Tanks:',
+                                   labelsOffsetY)
     local tanksField = createTextarea('tanksField', settingsWindow,
-                                      table.concat(settings.tanks, ', '), 95, wW)
+                                      table.concat(settings.tanks, ', '),
+                                      labelsOffsetY + 25, wW)
     settingsControls.tanksField = tanksField
     -- healers
+    labelsOffsetY = 255
     local healersLabel = createLabel('healersLabel', settingsWindow, 'Healers:',
-                                     200)
+                                     labelsOffsetY)
     local healersField = createTextarea('healersField', settingsWindow,
                                         table.concat(settings.healers, ', '),
-                                        225, wW)
+                                        labelsOffsetY + 25, wW)
     settingsControls.healersField = healersField
 
     -- icon settings
-    createLabel('iconCategoryLabel', settingsWindow, 'Icon', 330)
-    local labelsOffsetY = 355;
+    labelsOffsetY = 390;
+    createLabel('iconCategoryLabel', settingsWindow, 'Icon', labelsOffsetY)
+    labelsOffsetY = labelsOffsetY + 20
     local iconOffsetXLabel = createLabel('iconOffsetXLabel', settingsWindow,
                                          'offset X:', labelsOffsetY, 15)
     local iconOffsetXField = createEdit('iconOffsetXField', settingsWindow,
@@ -145,13 +189,15 @@ local function initSettingsPage()
     iconSizeField:SetText(tostring(settings.icon_size))
 
     -- class name settings
-    createLabel('classNameCategoryLabel', settingsWindow, 'Classname', 400)
-    labelsOffsetY = 430
+    labelsOffsetY = 440
+    createLabel('classNameCategoryLabel', settingsWindow, 'Classname',
+                labelsOffsetY)
+    labelsOffsetY = labelsOffsetY + 20
     local showClassName = createCheckbox('showClassName', settingsWindow,
                                          "Show classname", labelsOffsetY)
     showClassName:SetChecked(settings.show_class_name)
     settingsControls.showClassName = showClassName
-    labelsOffsetY = 455
+    labelsOffsetY = labelsOffsetY + 20
 
     local fontOffsetXLabel = createLabel('fontOffsetXLabel', settingsWindow,
                                          'offset X:', labelsOffsetY, 15)
@@ -216,7 +262,6 @@ end
 local function createSettingsPage()
     initSettingsPage()
     api.On("CHAT_MESSAGE", OnChatMessage)
-
 end
 
 local function Unload()

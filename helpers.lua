@@ -1,6 +1,7 @@
 local api = require("api")
 local defaultSettings = require('role_identifier/util/default_settings')
 local classes = require('role_identifier/util/classes')
+local sets = require('role_identifier/util/set_buffs')
 local CANVAS
 local function hasValue(tab, val)
     for index, value in ipairs(tab) do
@@ -8,6 +9,17 @@ local function hasValue(tab, val)
     end
 
     return false
+end
+
+local function getGearIconForTarget()
+    local buffCount = api.Unit:UnitBuffCount("target")
+    for i = 1, buffCount do
+        local buff = api.Unit:UnitBuff("target", i)
+        if buff and buff.buff_id then
+            if sets[buff.buff_id] then return sets[buff.buff_id] end
+        end
+    end
+    return nil;
 end
 
 local function getSettings(cnv)
@@ -83,6 +95,7 @@ local helpers = {
     getSettings = getSettings,
     updateSettings = updateSettings,
     getClassName = getClassName,
-    splitString = splitString
+    splitString = splitString,
+    getGearIconForTarget = getGearIconForTarget
 }
 return helpers

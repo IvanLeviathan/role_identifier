@@ -46,6 +46,17 @@ local function renderIcons(target)
             playerIcon = healerIconPath
         end
 
+        if settings.only_specified and playerIcon ~= nil then
+            if settings.icon_type == 2 then
+                playerIcon = helpers.getGearIconForTarget()
+            end
+        end
+
+        -- overwrite all icons if we show everything
+        if settings.only_specified == false and settings.icon_type == 2 then
+            playerIcon = helpers.getGearIconForTarget()
+        end
+
         playersClasses[target.name] = {className = className, icon = playerIcon}
     end
 
@@ -73,8 +84,13 @@ local function renderIcons(target)
             curIcon = playersClasses[target.name].icon
 
             if curIcon ~= nil then
-                local visible = icon:SetTgaTexture(curIcon)
-                icon:SetVisible(visible)
+                if settings.icon_type == 2 then
+                    icon:SetTexture(curIcon)
+                else
+                    local visible = icon:SetTgaTexture(curIcon)
+                    icon:SetVisible(visible)
+                end
+
             end
         end
         if curIcon ~= nil then
