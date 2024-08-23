@@ -104,7 +104,7 @@ function SetViewOfCheckButton(id, parent, text)
         textButton:SetAutoResize(true)
         textButton:SetHeight(16)
         textButton:SetText(text)
-        textButton.style:SetAlign(ALIGN_LEFT)
+        textButton.style:SetAlign(ALIGN.LEFT)
         button.textButton = textButton
     end
     function button:SetButtonStyle(style)

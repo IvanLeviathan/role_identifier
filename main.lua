@@ -24,8 +24,9 @@ local settings
 -- Renders
 local function renderIcons(target)
 
-    local offsetX, offsetY, offsetZ = api.Unit:GetUnitScreenNameTagOffset(
-                                          'target')
+    -- local offsetX, offsetY, offsetZ = api.Unit:GetUnitScreenNameTagOffset(
+    --   'target')
+    local offsetX, offsetY, offsetZ = api.Unit:GetUnitScreenPosition('target')
     local classNameOffsetX = math.ceil(offsetX + settings.class_name_offset_x)
     local classNameOffsetY = math.ceil(offsetY + settings.class_name_offset_y)
 
@@ -70,8 +71,11 @@ local function renderIcons(target)
     else
         if (curIcon ~= playersClasses[target.name].icon) then
             curIcon = playersClasses[target.name].icon
-            local visible = icon:SetTgaTexture(curIcon)
-            icon:SetVisible(visible)
+
+            if curIcon ~= nil then
+                local visible = icon:SetTgaTexture(curIcon)
+                icon:SetVisible(visible)
+            end
         end
         if curIcon ~= nil then
             canvasUI.icon:AddAnchor("CENTER", CANVAS, "CENTER", offsetX, offsetY)
@@ -94,10 +98,10 @@ end
 
 local lastUpdate = 0
 local function OnUpdate(dt)
-    lastUpdate = lastUpdate + dt
-    -- 20 is ok
-    if lastUpdate < 20 then return end
-    lastUpdate = dt
+    -- lastUpdate = lastUpdate + dt
+    -- -- 20 is ok
+    -- if lastUpdate < 20 then return end
+    -- lastUpdate = dt
 
     -- checking target
     local playerId = api.Unit:GetUnitId('player')
@@ -105,17 +109,21 @@ local function OnUpdate(dt)
     local targetInfo = api.Unit:GetUnitInfoById(targetId)
 
     -- no target
-    if targetInfo == nil then
+    if targetInfo == nil and canvasUI ~= nil then
         canvasUI.text:Show(false)
         canvasUI.icon:Show(false)
         return
     end
+
     -- checking if target is valid
-    if targetInfo.type == 'character' and playerId ~= targetId then
+    if targetInfo ~= nil and targetInfo.type == 'character' and playerId ~=
+        targetId then
         renderIcons(targetInfo)
     else
-        canvasUI.text:Show(false)
-        canvasUI.icon:Show(false)
+        if canvasUI ~= nil then
+            canvasUI.text:Show(false)
+            canvasUI.icon:Show(false)
+        end
     end
 end
 
