@@ -6,7 +6,7 @@ local role_identifier = {
     name = "Role Identifier",
     author = "Misosoup",
     desc = "Addon for detecting tank/healers classes",
-    version = "0.8"
+    version = "1.0"
 }
 local CANVAS
 
@@ -24,14 +24,15 @@ local settings
 -- Renders
 local function renderIcons(target)
 
-    -- local offsetX, offsetY, offsetZ = api.Unit:GetUnitScreenNameTagOffset(
-    --   'target')
-    local offsetX, offsetY, offsetZ = api.Unit:GetUnitScreenPosition('target')
+    local offsetX, offsetY, offsetZ = api.Unit:GetUnitScreenNameTagOffset(
+                                          'target')
     local classNameOffsetX = math.ceil(offsetX + settings.class_name_offset_x)
     local classNameOffsetY = math.ceil(offsetY + settings.class_name_offset_y)
 
     offsetX = math.ceil(offsetX + settings.icon_offset_x)
     offsetY = math.ceil(offsetY + settings.icon_offset_y)
+
+    local mainClass = helpers.getMainSkillsetName(target.class)
 
     if playersClasses[target.name] == nil then
         -- Calc role
@@ -50,6 +51,9 @@ local function renderIcons(target)
             if settings.icon_type == 2 then
                 playerIcon = helpers.getGearIconForTarget()
             end
+            if settings.icon_type == 3 then
+                playerIcon = helpers.getSkillsetIcon(mainClass)
+            end
         end
 
         -- overwrite all icons if we show everything
@@ -57,13 +61,21 @@ local function renderIcons(target)
             playerIcon = helpers.getGearIconForTarget()
         end
 
+        if settings.only_specified == false and settings.icon_type == 3 then
+            playerIcon = helpers.getSkillsetIcon(mainClass)
+        end
+
         playersClasses[target.name] = {className = className, icon = playerIcon}
     end
 
     if canvasUI == nil then
         -- Create Icon
-        icon = CANVAS:CreateImageDrawable("Textures/Defaults/White.dds",
-                                          "overlay")
+        if (settings.icon_type == 3) then
+            icon = CANVAS:CreateImageDrawable(TEXTURE_PATH.HUD, "overlay")
+        else
+            icon = CANVAS:CreateImageDrawable("Textures/Defaults/White.dds",
+                                              "overlay")
+        end
         icon:SetExtent(settings.icon_size, settings.icon_size)
         icon:SetVisible(false)
         icon:SetSRGB(false)
@@ -84,8 +96,12 @@ local function renderIcons(target)
             curIcon = playersClasses[target.name].icon
 
             if curIcon ~= nil then
-                if settings.icon_type == 2 then
+                if settings.icon_type == 2 then -- Gear
                     icon:SetTexture(curIcon)
+                elseif settings.icon_type == 3 then -- Skillset
+                    icon:SetCoords(curIcon[1], curIcon[2], curIcon[3],
+                                   curIcon[4])
+                    icon:SetVisible(true)
                 else
                     local visible = icon:SetTgaTexture(curIcon)
                     icon:SetVisible(visible)
@@ -152,6 +168,19 @@ local function OnSettingsSaved()
     else
         canvasUI.text:Show(false)
     end
+
+    canvasUI.icon:Show(false)
+    canvasUI.text:Show(false)
+    canvasUI = nil
+
+    -- update icon type
+    if (settings.icon_type == 3) then
+        icon = CANVAS:CreateImageDrawable(TEXTURE_PATH.HUD, "overlay")
+    else
+        icon = CANVAS:CreateImageDrawable("Textures/Defaults/White.dds",
+                                          "overlay")
+    end
+
     playersClasses = {}
 end
 
@@ -165,9 +194,11 @@ local function Load()
     -- Initiate Settings
     settingspage.init(CANVAS)
 
-    api.Log:Info(
-        "[RI] Roles Identifier loaded. Use \"/ri settings\" for settings page.")
+    api.Log:Info("Loaded " .. role_identifier.name .. " v" ..
+                     role_identifier.version .. " by " .. role_identifier.author)
+
     api.On("UPDATE", OnUpdate)
+
 end
 
 local function Unload()
@@ -180,5 +211,6 @@ end
 
 role_identifier.OnLoad = Load
 role_identifier.OnUnload = Unload
+role_identifier.OnSettingToggle = settingspage.openSettingsWindow
 
 return role_identifier

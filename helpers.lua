@@ -63,7 +63,7 @@ end
 
 local function updateSettings()
     api.SaveSettings()
-    api.Log:Info('[RI] Settings saved')
+    api.Log:Info('Role Identifier settings saved')
     local settings = getSettings()
     CANVAS.OnSettingsSaved()
     return settings
@@ -89,6 +89,51 @@ local function splitString(input, delimiter)
     end
     return result
 end
+-- Checking if a table contains a value by pairs, not ipairs
+local function tableContainsPairs(tbl, checkFor)
+    for i, value in pairs(tbl) do if value == checkFor then return true end end
+    return false
+end
+
+local function getMainSkillsetName(unitClassTable)
+    local classMappings = {
+        "Battlerage", "Witchcraft", "Defense", "Auramancy", "Occultism",
+        "Archery", "Sorcery", "Shadowplay", "Songcraft", "Vitalism"
+    }
+    -- Prioritizing different skill icons
+    if tableContainsPairs(unitClassTable, 6) then
+        return 6
+    elseif tableContainsPairs(unitClassTable, 10) then
+        return 10
+    elseif tableContainsPairs(unitClassTable, 7) then
+        return 7
+    elseif tableContainsPairs(unitClassTable, 1) then
+        return 1
+    elseif tableContainsPairs(unitClassTable, 3) then
+        return 3
+    end
+    return 0
+end
+
+local function getSkillsetIcon(skillsetId)
+    local size = 12
+    if skillsetId < 1 or skillsetId > 10 then return nil end
+    local coords = {
+        -- Battlerage Icon
+        {480, 498, size, size}, -- Witchcraft Icon
+        {534, 483, size, size}, -- Defense Icon
+        {492, 498, size, size}, -- Auramancy Icon
+        {510, 483, size, size}, -- Occultism Icon
+        {522, 471, size, size}, -- Archery Icon
+        {528, 454, size, size}, -- Sorcery Icon
+        {504, 498, size, size}, -- Shadowplay Icon
+        {522, 483, size, size}, -- Songcraft Icon
+        {534, 471, size, size}, -- Vitalism Icon
+        {510, 471, size, size}
+    }
+    local iconCoords = coords[skillsetId]
+    return iconCoords
+end
 
 local helpers = {
     hasValue = hasValue,
@@ -96,6 +141,8 @@ local helpers = {
     updateSettings = updateSettings,
     getClassName = getClassName,
     splitString = splitString,
-    getGearIconForTarget = getGearIconForTarget
+    getGearIconForTarget = getGearIconForTarget,
+    getMainSkillsetName = getMainSkillsetName,
+    getSkillsetIcon = getSkillsetIcon
 }
 return helpers

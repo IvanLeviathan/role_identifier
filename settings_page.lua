@@ -107,11 +107,9 @@ local function saveSettings()
 end
 local function openSettingsWindow() settingsWindow:Show(true) end
 local function toggleMode(state)
-    if state then
-        settingsControls.iconType:SetEnable(true)
-    else
-        settingsControls.iconType:Select(2)
-        settingsControls.iconType:SetEnable(false)
+    local curMode = settingsControls.iconType:GetSelectedIndex()
+    if not state then
+        if (curMode == 1) then settingsControls.iconType:Select(2) end
     end
 end
 
@@ -120,14 +118,16 @@ local function initSettingsPage()
     settingsWindow = api.Interface:CreateWindow("RiSettings",
                                                 'Role Identifier Settings', 800,
                                                 600)
+    settingsWindow:AddAnchor("CENTER", 'UIParent', 0, 0)
     local wW, wH = settingsWindow:GetExtent()
     local labelsOffsetY = 70
     -- mode
     local iconTypeLabel = createLabel('iconTypeLabel', settingsWindow, 'Mode:',
                                       labelsOffsetY, 15)
     labelsOffsetY = labelsOffsetY + 20
-    local iconType = createComboBox(settingsWindow, {'Tank/Healer', 'Set'},
-                                    padding, labelsOffsetY)
+    local iconType = createComboBox(settingsWindow,
+                                    {'Tank/Healer', 'Set', 'Skillset'}, padding,
+                                    labelsOffsetY)
     iconType:Select(settings.icon_type)
     settingsControls.iconType = iconType
     local onlySpecified = createCheckbox('onlySpecified', settingsWindow,
@@ -241,28 +241,7 @@ local function initSettingsPage()
     saveButton:SetHandler("OnClick", saveSettings)
 end
 
-local function OnChatMessage(chatType, speakerId, isHostile, speakerName,
-                             message)
-    if speakerId == playerId then
-        local prefix = "/ri "
-        if string.sub(message, 1, #prefix) == prefix then
-            local command = string.sub(message, #prefix + 1)
-            if helpers.hasValue(commands, command) then
-                if command == 'settings' then
-                    return openSettingsWindow()
-                end
-            else
-                api.Log:Info('[RI] Unknown command')
-            end
-
-        end
-    end
-end
-
-local function createSettingsPage()
-    initSettingsPage()
-    api.On("CHAT_MESSAGE", OnChatMessage)
-end
+local function createSettingsPage() initSettingsPage() end
 
 local function Unload()
     if settingsWindow ~= nil then
@@ -271,5 +250,9 @@ local function Unload()
     end
 end
 
-local settings_page = {init = createSettingsPage, Unload = Unload}
+local settings_page = {
+    init = createSettingsPage,
+    Unload = Unload,
+    openSettingsWindow = openSettingsWindow
+}
 return settings_page
