@@ -171,6 +171,7 @@ local function OnUpdate(dt)
     if targetInfo == nil and canvasUI ~= nil then
         canvasUI.text:Show(false)
         canvasUI.icon:Show(false)
+        canvasUI.gearscore:Show(false)
         return
     end
 
@@ -182,6 +183,7 @@ local function OnUpdate(dt)
         if canvasUI ~= nil then
             canvasUI.text:Show(false)
             canvasUI.icon:Show(false)
+            canvasUI.gearscore:Show(false)
         end
     end
 end
