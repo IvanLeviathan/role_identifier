@@ -10,6 +10,11 @@ local defaultSettings = {
     class_name_offset_x = -100,
     class_name_offset_y = 5,
 
+    show_gear_score = true,
+    gs_offset_x = -100,
+    gs_offset_y = -65,
+    gs_font_size = 18,
+
     tanks = {"abolisher", "Skullknight"},
     healers = {"Cleric", "Hierophant"}
 }

@@ -6,7 +6,7 @@ local role_identifier = {
     name = "Role Identifier",
     author = "Misosoup",
     desc = "Addon for detecting tank/healers classes",
-    version = "1.0"
+    version = "1.1"
 }
 local CANVAS
 
@@ -22,12 +22,15 @@ local canvasUI
 local settings
 
 -- Renders
-local function renderIcons(target)
+local function renderIcons(target, gearscore)
 
     local offsetX, offsetY, offsetZ = api.Unit:GetUnitScreenNameTagOffset(
                                           'target')
     local classNameOffsetX = math.ceil(offsetX + settings.class_name_offset_x)
     local classNameOffsetY = math.ceil(offsetY + settings.class_name_offset_y)
+
+    local gsOffsetX = math.ceil(offsetX + settings.gs_offset_x)
+    local gsOffsetY = math.ceil(offsetY + settings.gs_offset_y)
 
     offsetX = math.ceil(offsetX + settings.icon_offset_x)
     offsetY = math.ceil(offsetY + settings.icon_offset_y)
@@ -84,8 +87,12 @@ local function renderIcons(target)
         local className = CANVAS:CreateChildWidget("label", "label", 0, true)
         className.style:SetFontSize(settings.font_size)
 
+        -- Create GS
+        local gs = CANVAS:CreateChildWidget("label", "gearscore", 0, true)
+        gs.style:SetFontSize(settings.gs_font_size)
+
         -- Save info
-        canvasUI = {icon = icon, text = className}
+        canvasUI = {icon = icon, text = className, gearscore = gs}
     end
 
     if offsetZ < 0 or offsetZ > 100 then
@@ -120,26 +127,46 @@ local function renderIcons(target)
                 canvasUI.text:Show(true)
             end
 
+            if settings.show_gear_score then
+                canvasUI.gearscore:AddAnchor("CENTER", CANVAS, "CENTER",
+                                             gsOffsetX, gsOffsetY)
+                canvasUI.gearscore:SetText(gearscore)
+                canvasUI.gearscore:Show(true)
+            end
+
         else
             canvasUI.icon:Show(false)
             canvasUI.text:Show(false)
+            canvasUI.gearscore:Show(false)
         end
 
     end
 end
 
 local lastUpdate = 0
+
+local timeStart = 0
+
 local function OnUpdate(dt)
-    -- lastUpdate = lastUpdate + dt
-    -- -- 20 is ok
-    -- if lastUpdate < 20 then return end
-    -- lastUpdate = dt
+    lastUpdate = lastUpdate + dt
+    -- 20 is ok
+    if lastUpdate < 20 then return end
+    lastUpdate = dt
+
+    if (timeStart == 0) then timeStart = api.Time:GetUiMsec() end
+
+    local diff = (api.Time:GetUiMsec() - timeStart) / 1000
+    -- clearing players classes each minute to fix respec stuck icon
+    if (diff > 60) then
+        playersClasses = {}
+        timeStart = 0
+    end
 
     -- checking target
     local playerId = api.Unit:GetUnitId('player')
     local targetId = api.Unit:GetUnitId('target')
     local targetInfo = api.Unit:GetUnitInfoById(targetId)
-
+    local targetGS = api.Unit:UnitGearScore('target')
     -- no target
     if targetInfo == nil and canvasUI ~= nil then
         canvasUI.text:Show(false)
@@ -150,7 +177,7 @@ local function OnUpdate(dt)
     -- checking if target is valid
     if targetInfo ~= nil and targetInfo.type == 'character' and playerId ~=
         targetId then
-        renderIcons(targetInfo)
+        renderIcons(targetInfo, targetGS)
     else
         if canvasUI ~= nil then
             canvasUI.text:Show(false)
@@ -169,8 +196,15 @@ local function OnSettingsSaved()
         canvasUI.text:Show(false)
     end
 
+    if settings.show_gear_score then
+        canvasUI.gearscore:Show(true)
+    else
+        canvasUI.gearscore:Show(false)
+    end
+
     canvasUI.icon:Show(false)
     canvasUI.text:Show(false)
+    canvasUI.gearscore:Show(false)
     canvasUI = nil
 
     -- update icon type

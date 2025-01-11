@@ -102,6 +102,12 @@ local function saveSettings()
 
     settings.icon_type = settingsControls.iconType:GetSelectedIndex()
 
+    settings.show_gear_score = settingsControls.showGs:GetChecked()
+
+    settings.gs_offset_y = tonumber(settingsControls.gsOffsetYField:GetText())
+    settings.gs_offset_x = tonumber(settingsControls.gsOffsetXField:GetText())
+    settings.gs_font_size = tonumber(settingsControls.gsSizeField:GetText())
+
     helpers.updateSettings()
 
 end
@@ -117,7 +123,7 @@ local function initSettingsPage()
     settings = api.GetSettings("role_identifier")
     settingsWindow = api.Interface:CreateWindow("RiSettings",
                                                 'Role Identifier Settings', 800,
-                                                600)
+                                                650)
     settingsWindow:AddAnchor("CENTER", 'UIParent', 0, 0)
     local wW, wH = settingsWindow:GetExtent()
     local labelsOffsetY = 70
@@ -146,7 +152,7 @@ local function initSettingsPage()
     local tanksLabel = createLabel('tanksLabel', settingsWindow, 'Tanks:',
                                    labelsOffsetY)
     local tanksField = createTextarea('tanksField', settingsWindow,
-                                      table.concat(settings.tanks, ', '),
+                                      table.concat(settings.tanks or {}, ', '),
                                       labelsOffsetY + 25, wW)
     settingsControls.tanksField = tanksField
     -- healers
@@ -154,8 +160,9 @@ local function initSettingsPage()
     local healersLabel = createLabel('healersLabel', settingsWindow, 'Healers:',
                                      labelsOffsetY)
     local healersField = createTextarea('healersField', settingsWindow,
-                                        table.concat(settings.healers, ', '),
-                                        labelsOffsetY + 25, wW)
+                                        table.concat(settings.healers or {},
+                                                     ', '), labelsOffsetY + 25,
+                                        wW)
     settingsControls.healersField = healersField
 
     -- icon settings
@@ -227,6 +234,44 @@ local function initSettingsPage()
     fontSizeField:SetMaxTextLength(2)
     fontSizeField:SetText(tostring(settings.font_size))
 
+    -- gearscore
+    local gsCategoryLabel = createLabel('gsCategoryLabel', fontOffsetXLabel,
+                                        'Gearscore', 30)
+    gsCategoryLabel:AddAnchor("TOPLEFT", fontOffsetXLabel, "BOTTOMLEFT", 0, 10)
+    local showGs = createCheckbox('showGs', gsCategoryLabel, "Show gearscore",
+                                  30)
+    showGs:AddAnchor("TOPLEFT", gsCategoryLabel, "BOTTOMLEFT", 0, 0)
+    showGs:SetChecked(settings.show_gear_score)
+    settingsControls.showGs = showGs
+
+    local gsOffsetXLabel = createLabel('gsOffsetXLabel', gsCategoryLabel,
+                                       'offset X:', 30, 15)
+    gsOffsetXLabel:AddAnchor("TOPLEFT", showGs, "BOTTOMLEFT", 0, 0)
+    local gsOffsetXField = createEdit('gsOffsetXField', gsOffsetXLabel,
+                                      settings.gs_offset_x, 30)
+    gsOffsetXField:AddAnchor("TOPLEFT", 65, 0)
+    settingsControls.gsOffsetXField = gsOffsetXField
+
+    local gsOffsetYLabel = createLabel('gsOffsetYLabel', gsOffsetXField,
+                                       'offset Y:', 30, 15)
+    gsOffsetYLabel:AddAnchor("TOPLEFT", 110, 0)
+    local gsOffsetYField = createEdit('gsOffsetYField', gsOffsetYLabel,
+                                      settings.gs_offset_y, 30)
+    gsOffsetYField:AddAnchor("TOPLEFT", 60, 0)
+    settingsControls.gsOffsetYField = gsOffsetYField
+
+    local gsSizeLabel = createLabel('gsSizeLabel', gsOffsetYField, 'size:', 30,
+                                    15)
+    gsSizeLabel:AddAnchor("TOPLEFT", 110, 0)
+    local gsSizeField = createEdit('gsSizeField', gsSizeLabel,
+                                   settings.gs_font_size, 30)
+    gsSizeField:AddAnchor("TOPLEFT", 35, 0)
+    gsSizeField:SetDigit(true)
+    gsSizeField:SetMaxTextLength(2)
+    gsSizeField:SetText(tostring(settings.gs_font_size))
+
+    settingsControls.gsSizeField = gsSizeField
+
     -- save button
     local saveButton = createButton('saveButton', settingsWindow, 'Save', 0, 0)
     saveButton:AddAnchor("TOPLEFT", settingsWindow, "BOTTOMLEFT", padding, -45)
@@ -234,7 +279,7 @@ local function initSettingsPage()
     -- copyrights
     local copyright = createLabel('copyright', settingsWindow,
                                   'from Misosoup with love for AAC', 0, 14)
-    copyright:AddAnchor("TOPLEFT", settingsWindow, "BOTTOMRIGHT", -275, -45)
+    copyright:AddAnchor("TOPLEFT", settingsWindow, "BOTTOMRIGHT", -275, -35)
     copyright.style:SetAlign(ALIGN.BOTTOM_RIGHT)
 
     -- controls are done, now events
