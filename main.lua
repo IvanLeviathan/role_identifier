@@ -6,7 +6,7 @@ local role_identifier = {
     name = "Role Identifier",
     author = "Misosoup",
     desc = "Addon for detecting tank/healers classes",
-    version = "1.1"
+    version = "1.2"
 }
 local CANVAS
 
@@ -40,6 +40,8 @@ local function renderIcons(target, gearscore)
     if playersClasses[target.name] == nil then
         -- Calc role
         local className = helpers.getClassName(target.class)
+        local apiClassName = api.Ability:GetUnitClassName('target')
+        if apiClassName ~= nil then className = apiClassName end
         local playerIcon
 
         if helpers.hasValue(settings.tanks, className) then
